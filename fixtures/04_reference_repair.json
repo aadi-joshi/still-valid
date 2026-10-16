@@ -1,0 +1,38 @@
+{
+  "id": "04_reference_repair",
+  "title": "A supplied reference repair restores a valid plan after the change",
+  "initial_state": {
+    "have_key": true,
+    "spare_key_stored": true,
+    "cabinet_open": false,
+    "panel_powered": false
+  },
+  "change": {
+    "have_key": false
+  },
+  "actions": {
+    "fetch_spare_key": {
+      "preconditions": {"spare_key_stored": true},
+      "effects": {"have_key": true, "spare_key_stored": false}
+    },
+    "unlock_cabinet": {
+      "preconditions": {"have_key": true},
+      "effects": {"cabinet_open": true}
+    },
+    "power_panel": {
+      "preconditions": {"cabinet_open": true},
+      "effects": {"panel_powered": true}
+    }
+  },
+  "plan": ["unlock_cabinet", "power_panel"],
+  "alternative": {
+    "role": "repair",
+    "plan": ["fetch_spare_key", "unlock_cabinet", "power_panel"]
+  },
+  "expected": {
+    "invalid_steps": [1, 2],
+    "original_valid": false,
+    "alternative_valid": true,
+    "unnecessary_rewrite": false
+  }
+}

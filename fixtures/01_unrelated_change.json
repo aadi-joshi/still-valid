@@ -1,0 +1,31 @@
+{
+  "id": "01_unrelated_change",
+  "title": "An unrelated state change leaves the original plan valid",
+  "initial_state": {
+    "have_key": true,
+    "cabinet_open": false,
+    "panel_powered": false,
+    "weather_clear": true
+  },
+  "change": {
+    "weather_clear": false
+  },
+  "actions": {
+    "unlock_cabinet": {
+      "preconditions": {"have_key": true},
+      "effects": {"cabinet_open": true}
+    },
+    "power_panel": {
+      "preconditions": {"cabinet_open": true},
+      "effects": {"panel_powered": true}
+    }
+  },
+  "plan": ["unlock_cabinet", "power_panel"],
+  "alternative": null,
+  "expected": {
+    "invalid_steps": [],
+    "original_valid": true,
+    "alternative_valid": null,
+    "unnecessary_rewrite": false
+  }
+}

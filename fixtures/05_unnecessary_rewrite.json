@@ -1,0 +1,39 @@
+{
+  "id": "05_unnecessary_rewrite",
+  "title": "An unnecessary rewrite changes a plan that was already valid",
+  "initial_state": {
+    "have_key": true,
+    "cabinet_open": false,
+    "panel_powered": false,
+    "weather_clear": true,
+    "status_logged": false
+  },
+  "change": {
+    "weather_clear": false
+  },
+  "actions": {
+    "unlock_cabinet": {
+      "preconditions": {"have_key": true},
+      "effects": {"cabinet_open": true}
+    },
+    "log_status": {
+      "preconditions": {},
+      "effects": {"status_logged": true}
+    },
+    "power_panel": {
+      "preconditions": {"cabinet_open": true},
+      "effects": {"panel_powered": true}
+    }
+  },
+  "plan": ["unlock_cabinet", "power_panel"],
+  "alternative": {
+    "role": "rewrite",
+    "plan": ["unlock_cabinet", "log_status", "power_panel"]
+  },
+  "expected": {
+    "invalid_steps": [],
+    "original_valid": true,
+    "alternative_valid": true,
+    "unnecessary_rewrite": true
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "03_failed_effect_blocks_later_step",
+  "title": "A failed action leaves a later step's required effect unavailable",
+  "initial_state": {
+    "have_key": true,
+    "cabinet_open": false,
+    "panel_powered": false
+  },
+  "change": {
+    "have_key": false
+  },
+  "actions": {
+    "unlock_cabinet": {
+      "preconditions": {"have_key": true},
+      "effects": {"cabinet_open": true}
+    },
+    "power_panel": {
+      "preconditions": {"cabinet_open": true},
+      "effects": {"panel_powered": true}
+    }
+  },
+  "plan": ["unlock_cabinet", "power_panel"],
+  "alternative": null,
+  "expected": {
+    "invalid_steps": [1, 2],
+    "original_valid": false,
+    "alternative_valid": null,
+    "unnecessary_rewrite": false
+  }
+}

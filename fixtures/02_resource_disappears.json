@@ -1,0 +1,31 @@
+{
+  "id": "02_resource_disappears",
+  "title": "A required resource disappears, making an action invalid",
+  "initial_state": {
+    "tool_ready": true,
+    "tool_in_hand": false,
+    "gauge_present": true,
+    "gauge_read": false
+  },
+  "change": {
+    "tool_ready": false
+  },
+  "actions": {
+    "take_tool": {
+      "preconditions": {"tool_ready": true},
+      "effects": {"tool_in_hand": true, "tool_ready": false}
+    },
+    "read_gauge": {
+      "preconditions": {"gauge_present": true},
+      "effects": {"gauge_read": true}
+    }
+  },
+  "plan": ["take_tool", "read_gauge"],
+  "alternative": null,
+  "expected": {
+    "invalid_steps": [1],
+    "original_valid": false,
+    "alternative_valid": null,
+    "unnecessary_rewrite": false
+  }
+}
