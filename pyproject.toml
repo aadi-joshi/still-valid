@@ -1,0 +1,13 @@
+[project]
+name = "plan-validator"
+version = "1.0.0"
+description = "Offline checker for Boolean plans after a deterministic world-state change."
+requires-python = ">=3.10"
+readme = "README.md"
+authors = [
+  { name = "Aadi Joshi" },
+  { name = "Kavya Bhand" },
+]
+
+[tool.setuptools]
+packages = ["validator"]
