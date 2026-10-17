@@ -1,0 +1,69 @@
+Plan validator: five synthetic fixtures
+Replay rule: apply the state change, then walk the plan in order.
+A step with any unmet precondition does not apply its effects.
+Later steps are checked against that state. Step numbers start at 1.
+
+fixture                             expected_invalid  observed_invalid  match  no_repair_valid  alternative  expected_alt_valid  observed_alt_valid  unnecessary_rewrite
+----------------------------------  ----------------  ----------------  -----  ---------------  -----------  ------------------  ------------------  -------------------
+01_unrelated_change                 none              none              yes    yes              n/a          n/a                 n/a                 no                 
+02_resource_disappears              1                 1                 yes    no               n/a          n/a                 n/a                 no                 
+03_failed_effect_blocks_later_step  1,2               1,2               yes    no               n/a          n/a                 n/a                 no                 
+04_reference_repair                 1,2               1,2               yes    no               repair       yes                 yes                 no                 
+05_unnecessary_rewrite              none              none              yes    yes              rewrite      yes                 yes                 yes                
+
+No-repair column is the original plan after the change, before any supplied repair or rewrite.
+
+An unrelated state change leaves the original plan valid
+TRACE 01_unrelated_change
+  original:
+    step 1 unlock_cabinet: unmet none; applied
+    step 2 power_panel: unmet none; applied
+
+A required resource disappears, making an action invalid
+TRACE 02_resource_disappears
+  original:
+    step 1 take_tool: unmet tool_ready=true; rejected
+    step 2 read_gauge: unmet none; applied
+
+A failed action leaves a later step's required effect unavailable
+TRACE 03_failed_effect_blocks_later_step
+  original:
+    step 1 unlock_cabinet: unmet have_key=true; rejected
+    step 2 power_panel: unmet cabinet_open=true; rejected [cabinet_open withheld by unlock_cabinet]
+  lenient contrast invalid steps: 1 (failed effects were applied; this is not the validator)
+
+A supplied reference repair restores a valid plan after the change
+TRACE 04_reference_repair
+  original:
+    step 1 unlock_cabinet: unmet have_key=true; rejected
+    step 2 power_panel: unmet cabinet_open=true; rejected [cabinet_open withheld by unlock_cabinet]
+  lenient contrast invalid steps: 1 (failed effects were applied; this is not the validator)
+  repair:
+    step 1 fetch_spare_key: unmet none; applied
+    step 2 unlock_cabinet: unmet none; applied
+    step 3 power_panel: unmet none; applied
+
+An unnecessary rewrite changes a plan that was already valid
+TRACE 05_unnecessary_rewrite
+  original:
+    step 1 unlock_cabinet: unmet none; applied
+    step 2 power_panel: unmet none; applied
+  rewrite:
+    step 1 unlock_cabinet: unmet none; applied
+    step 2 log_status: unmet none; applied
+    step 3 power_panel: unmet none; applied
+
+Error classes
+  missed invalidation: fixtures 02, 03, and 04 are rejected at the unmet steps.
+    A checker that did not read preconditions would accept every sequence, including these.
+    This validator records the unmet steps instead.
+  invalid continuation: fixture 03 stays invalid at step 2 because unlock_cabinet did not
+    write cabinet_open. The lenient contrast applies that failed effect and then hides step 2.
+    The validator uses the strict rule and rejects the continuation.
+  unnecessary rewriting: fixture 05's original plan is valid. The other plan is recorded as a
+    rewrite, and it is not labelled as an invalid continuation.
+
+Property checks: pass (200 random replays, seed 0, plus the fixed cascade, change-order, empty-plan, and negative-precondition checks)
+Elapsed: 22.07 ms
+Compute: local CPython, Boolean replay only. No GPU, model call, dataset, or remote run.
+RESULT: pass
