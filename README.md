@@ -20,6 +20,8 @@ The command loads `fixtures/*.json`, applies each world-state change, replays th
 
 Exit code 0 means every expected value matched. Exit code 1 means a mismatch or a failed property check. The `expected` blocks are the oracle. A failure is fixed in the checker, not by editing the oracle to match a wrong trace.
 
+A fixture object cannot repeat a key at any nesting level. The loader raises instead of keeping the last value. Entries in `expected.invalid_steps` must be JSON integers starting at 1. The JSON boolean `true` is not a step number: in Python `bool` is a subclass of `int`, and `True == 1`.
+
 The same checks run under:
 
 ```text
@@ -84,6 +86,7 @@ The table's no-repair column is always the original plan after the change, befor
 - An unnecessary rewrite is any different plan offered while the original plan still replays. The checker does not measure edit distance, and it does not prefer a cheaper plan.
 - The random suite uses a fixed seed and small action sets. It guards the rule. It is not a planning benchmark.
 - The run is local Boolean lookup. It does not need a GPU.
+- `withheld_by` lists earlier failed actions whose effects included the unmet literal. A later successful write of that fact does not clear those names. After a later deletion, the field can still point at the old failed action, so it is provenance inside the trace, not a proof of what caused the current miss. The valid or invalid decision does not use the field.
 
 ## Background
 

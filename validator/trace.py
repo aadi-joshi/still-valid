@@ -11,10 +11,13 @@ from validator.model import Literal
 class StepRecord:
     """One plan step after the world-state change has already been applied.
 
-    ``withheld_by`` names earlier failed actions whose effects would have
-    written an unmet literal. An empty tuple means the literal was already
-    false in the state the step actually saw, which is how a direct
-    resource loss is distinguished from a cascade.
+    ``withheld_by`` names earlier failed actions whose effects included an
+    unmet literal. It is not dropped when a later successful action writes
+    that fact, so after a still later deletion it can name a failed action
+    that no longer explains the current state. Plan validity does not use
+    this field. An empty tuple means no earlier failed action listed the
+    literal, which is how a direct resource loss is distinguished from a
+    cascade inside the current trace.
     """
 
     index: int

@@ -63,10 +63,20 @@ def _plan(names: Any, actions: dict[str, Action], fixture_id: str, field: str) -
     return tuple(actions[name] for name in names)
 
 
+def _json_int(step: Any) -> bool:
+    """True only for a JSON integer.
+
+    ``bool`` is a subclass of ``int``, and ``True == 1``, so
+    ``isinstance(True, int)`` would accept a JSON ``true`` as step 1.
+    """
+
+    return type(step) is int
+
+
 def _expectation(payload: dict[str, Any], fixture_id: str) -> Expectation:
     raw = _require_map(payload, "expected", fixture_id)
     invalid = raw.get("invalid_steps")
-    if not isinstance(invalid, list) or any(not isinstance(step, int) or step < 1 for step in invalid):
+    if not isinstance(invalid, list) or any(not _json_int(step) or step < 1 for step in invalid):
         raise ValueError(f"{fixture_id}: expected.invalid_steps must be a list of 1-based step numbers")
     original_valid = raw.get("original_valid")
     alternative_valid = raw.get("alternative_valid")
@@ -83,8 +93,33 @@ def _expectation(payload: dict[str, Any], fixture_id: str) -> Expectation:
     )
 
 
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """Reject a repeated key instead of keeping the last value.
+
+    RFC 8259 says object names should be unique. The default ``json.loads``
+    keeps the last occurrence, which can change which plan or fact a fixture
+    means. The hook runs for every object, so nested action maps are covered.
+    """
+
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON object key: {key!r}")
+        result[key] = value
+    return result
+
+
+def _load_json(path: Path) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=_unique_object)
+    except ValueError as exc:
+        if str(exc).startswith("duplicate JSON object key:"):
+            raise ValueError(f"{path.name}: {exc}") from exc
+        raise
+
+
 def load_fixture(path: Path) -> Fixture:
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = _load_json(path)
     if not isinstance(payload, dict):
         raise ValueError(f"{path.name}: fixture must be an object")
     fixture_id = payload.get("id")

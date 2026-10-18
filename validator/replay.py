@@ -32,6 +32,8 @@ def replay(
     apply_failed_effects: bool = False,
 ) -> Trace:
     current = state
+    # Retained for the whole replay, including after a later successful write
+    # of the same fact. See StepRecord.withheld_by.
     failed_producers: dict[tuple[str, bool], list[str]] = {}
     steps: list[StepRecord] = []
 
